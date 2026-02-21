@@ -29,7 +29,6 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_KEY }}
-          port: ${{ secrets.DEPLOY_PORT }}
           script: |
             set -e
             APP_PATH="${{ secrets.DEPLOY_PATH }}"
