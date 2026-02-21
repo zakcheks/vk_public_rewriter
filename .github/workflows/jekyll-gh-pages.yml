@@ -23,6 +23,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check deploy secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          SECRETS_URL: https://github.com/${{ github.repository }}/settings/secrets/actions
+        run: |
+          missing=""
+          [ -z "$DEPLOY_HOST" ] && missing="DEPLOY_HOST (IP или домен сервера)"
+          [ -z "$DEPLOY_USER" ] && missing="${missing:+$missing, }DEPLOY_USER (пользователь SSH)"
+          [ -z "$DEPLOY_KEY" ] && missing="${missing:+$missing, }DEPLOY_KEY (приватный SSH-ключ)"
+          if [ -n "$missing" ]; then
+            echo "::error::Не заданы секреты: $missing. Добавьте их: $SECRETS_URL"
+            exit 1
+          fi
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
