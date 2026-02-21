@@ -6,7 +6,7 @@
 #   DEPLOY_KEY   — приватный SSH-ключ (содержимое id_rsa)
 #   DEPLOY_PATH  — каталог приложения на сервере (например /home/ubuntu/vk_public_rewriter)
 #
-# На сервере один раз: git clone <repo> DEPLOY_PATH, настроить systemd или оставить запуск через nohup
+# На сервере один раз: git clone https://github.com/zakcheks/vk_public_rewriter.git DEPLOY_PATH, настроить systemd или оставить запуск через nohup
 
 name: Deploy
 
@@ -28,7 +28,7 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          SECRETS_URL: https://github.com/${{ github.repository }}/settings/secrets/actions
+          SECRETS_URL: https://github.com/zakcheks/vk_public_rewriter/settings/secrets/actions
         run: |
           missing=""
           [ -z "$DEPLOY_HOST" ] && missing="DEPLOY_HOST (IP или домен сервера)"
