@@ -1,0 +1,50 @@
+# Деплой VK Link Rewriter на VPS по SSH
+#
+# Секреты (Settings → Secrets and variables → Actions):
+#   DEPLOY_HOST  — IP или домен сервера (например 1.2.3.4)
+#   DEPLOY_USER  — пользователь SSH (например ubuntu)
+#   DEPLOY_KEY   — приватный SSH-ключ (содержимое id_rsa)
+#   DEPLOY_PATH  — каталог приложения на сервере (например /home/ubuntu/vk_public_rewriter)
+#
+# На сервере один раз: git clone <repo> DEPLOY_PATH, настроить systemd или оставить запуск через nohup
+
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          script: |
+            set -e
+            APP_PATH="${{ secrets.DEPLOY_PATH }}"
+            [ -z "$APP_PATH" ] && APP_PATH="$HOME/vk_public_rewriter"
+            cd "$APP_PATH"
+            git fetch origin main
+            git reset --hard origin/main
+            python3 -m venv .venv 2>/dev/null || true
+            . .venv/bin/activate
+            pip install --upgrade pip
+            pip install -r requirements.txt gunicorn
+            if systemctl is-active --quiet vk-rewriter 2>/dev/null; then
+              sudo systemctl restart vk-rewriter
+            else
+              pkill -f "gunicorn.*app:app" || true
+              sleep 1
+              nohup gunicorn -w 1 -b 0.0.0.0:5000 app:app > /dev/null 2>&1 &
+            fi
